@@ -20,7 +20,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='user')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='likes_user')
     post = models.ForeignKey(Post, on_delete=models.CASCADE,related_name='likes')
     created_at = models.DateTimeField(auto_now_add=True)
 

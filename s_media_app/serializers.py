@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from s_media_app.models import User,Post,Like,Comment,Message,Notification
+from s_media_app.models import User,Post,Like,Comment,Message
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,7 +37,5 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = '__all__'
-class NotificationSerializer(serializers.Serializer):
-    class Meta:
-        mpdel=Notification
-        fields='__all__'
+
+
