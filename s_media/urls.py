@@ -19,5 +19,9 @@ from django.urls import path,include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('s_media_app.urls')),
+    path('social/', include('s_media_app.urls.user_urls')),
+    path('social/', include('s_media_app.urls.post_urls')),
+    path('social/', include('s_media_app.urls.follow_urls')),
+    path('social/', include('s_media_app.urls.message_urls')),
+    path('social/', include('s_media_app.urls.search_urls')),
 ]
