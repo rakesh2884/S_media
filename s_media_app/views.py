@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from s_media_app.decorators import is_user,is_admin,is_moderator
 from rest_framework_simplejwt.tokens import RefreshToken
 from s_media_app.models import User,Post,Like,Comment,Message,Notification
 from s_media_app.serializers import (UserSerializer,PostSerializer,LikeSerializer,CommentSerializer,UserProfileSerializer,MessageSerializer)
@@ -233,6 +234,4 @@ class search(APIView):
             post = Post.objects.filter(caption__icontains=search_value)
             serializer = PostSerializer(post, many=True)
             return Response(serializer.data,status=status.HTTP_302_FOUND)
-
-
-
+        
