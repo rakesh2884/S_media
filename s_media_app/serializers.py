@@ -1,23 +1,29 @@
 from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework import status
 from s_media_app.models import User,Post,Like,Comment,Message
 
 class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'password', 'role', 'profile_picture']
-        extra_kwargs = {'password': {'write_only': True}}
-class UserProfileSerializer(serializers.ModelSerializer):
     followers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     following = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     def get_followers(self, obj):
-        return [follower.username for follower in obj.followers.all()]
+        for follower in obj.followers.all():
+            if follower:
+                return [follower.username]
+            else:
+                return Response({'message':'no followers'},status=status.HTTP_400_BAD_REQUEST)
 
     def get_following(self, obj):
-        return [following.username for following in obj.following.all()]
-
+        for following in obj.following.all():
+            if following:
+                return [following.username]
+            else:
+                return Response({'message':'no followers'},status=status.HTTP_400_BAD_REQUEST)
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'followers', 'following']
+        fields = ['id', 'username', 'email', 'password', 'role', 'profile_picture','followers','following']
+        extra_kwargs = {'password': {'write_only': True}}
+    
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
