@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+
+from s_media_app.handlers.error_handler import error_response
+from s_media_app.handlers.success_handler import success_response
 from s_media_app.models import Post,Like
 from s_media_app.serializers import PostSerializer,LikeSerializer,CommentSerializer
 
@@ -13,14 +14,14 @@ class create_post(APIView):
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user) 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+            return success_response(serializer.data, 201)
+        return error_response(serializer.errors, 400)
+
 class get_posts(APIView):
     def get(self,request):
         posts = Post.objects.all()
         serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+        return success_response(serializer.data,202)
 
 class update_post(APIView):
     @permission_classes([IsAuthenticated])
@@ -28,12 +29,12 @@ class update_post(APIView):
         try:
             post = Post.objects.get(id=post_id, user=request.user)
         except Post.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response('Post not found', 404)
         serializer = PostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return success_response(serializer.data, 200)
+        return error_response(serializer.errors, 400)
 
 class delete_post(APIView):
     @permission_classes([IsAuthenticated])
@@ -41,10 +42,10 @@ class delete_post(APIView):
         try:
             post = Post.objects.get(id=post_id, user=request.user)
         except Post.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response('Post not found', 404)
 
         post.delete()
-        return Response({'message': 'Post deleted successfully'}, status=status.HTTP_400_BAD_REQUEST)
+        return success_response('Post deleted successfully', 200)
 
 class like_post(APIView):
     @permission_classes([IsAuthenticated])
@@ -52,16 +53,16 @@ class like_post(APIView):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response('Post not found', 404)
         serializer = LikeSerializer(data=request.data)
         like = Like.objects.get(user=request.user, post=post)
         if like:
-            return Response({'error': 'You have already liked this post'}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response('You have already liked this post', 400)
         else:
             if serializer.is_valid():
                 serializer.save(user=request.user, post=post)
-                return Response({'message': 'Post liked successfully'}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return success_response('Post liked successfully', 201)
+            return error_response(serializer.errors, 400)
 
 class comment_on_post(APIView):
     @permission_classes([IsAuthenticated])
@@ -69,27 +70,27 @@ class comment_on_post(APIView):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response('Post not found',404)
 
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, post=post)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return success_response(serializer.data, 201)
+        return error_response(serializer.errors, 400)
 
 class liked_posts(APIView):
     @permission_classes([IsAuthenticated])
     def get(self,request):
         liked_posts = Post.objects.filter(likes__user=request.user).order_by('created_at')
         serializer = PostSerializer(liked_posts, many=True)
-        return Response(serializer.data,status=status.HTTP_302_FOUND)
+        return success_response(serializer.data,302)
 
 class commented_posts(APIView):
     @permission_classes([IsAuthenticated])
     def get(self,request):
         commented_posts = Post.objects.filter(comments__user=request.user).order_by('created_at')
         serializer = PostSerializer(commented_posts, many=True)
-        return Response(serializer.data,status=status.HTTP_302_FOUND)
+        return success_response(serializer.data,302)
 
 class feed(APIView):
     @permission_classes([IsAuthenticated])
@@ -97,4 +98,4 @@ class feed(APIView):
         followed_users = request.user.following.all()
         posts = Post.objects.filter(user__in=followed_users).order_by('created_at')
         serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data,status=status.HTTP_302_FOUND)
+        return success_response(serializer.data,302)
