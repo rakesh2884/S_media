@@ -1,8 +1,10 @@
-from s_media_app.models import User
-from rest_framework.response import Response
 from functools import wraps
-from s_media import settings
+
+from rest_framework.response import Response
 from rest_framework import status
+
+from s_media import settings
+
 
 def is_user(f):
     @wraps(f)

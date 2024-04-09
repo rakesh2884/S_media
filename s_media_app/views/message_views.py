@@ -1,11 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
-from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
+from s_media_app.handlers.error_handler import error_response
+from s_media_app.handlers.success_handler import success_response
 from s_media_app.models import User,Message,Notification
 from s_media_app.serializers import MessageSerializer
 
@@ -20,15 +18,15 @@ class send_message(APIView):
             notifi="you received an dm from ",request.user.username
             n=Notification(user_id=user_id,sender_id=request.user.id,subject=notifi)
             n.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+            return success_response(serializer.data, 201)
+        return error_response(serializer.errors, 400)
+
 class view_message(APIView):
     @permission_classes([IsAuthenticated])
     def get(self,request,sender_id):
         user_message = Message.objects.filter(sender_id=sender_id,receiver_id=request.user)
         serializer = MessageSerializer(user_message, many=True)
-        return Response(serializer.data,status=status.HTTP_302_FOUND)
+        return success_response(serializer.data,302)
 
 class delete_message(APIView):
     @permission_classes([IsAuthenticated])
@@ -36,15 +34,15 @@ class delete_message(APIView):
         try:
             message = Message.objects.get(sender_id=sender_id, receiver_id=request.user)
         except Message.DoesNotExist:
-            return Response({'error': 'Message not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response('Message not found', 404)
 
         Message.delete()
-        return Response({'message': 'Message deleted successfully'}, status=status.HTTP_400_BAD_REQUEST)
-    
+        return success_response('Message deleted successfully', 200)
+
 class view_notifications(APIView):
     @permission_classes([IsAuthenticated])
     def get(self, request):
         notifications = Notification.objects.filter(user=request.user).order_by('created_at')
         for notification in notifications:
             notification_data = {'user': notification.user.id, 'sender': notification.sender.id, 'subject': notification.subject} 
-        return Response(notification_data,status=status.HTTP_202_ACCEPTED)
+        return success_response(notification_data,status=202)

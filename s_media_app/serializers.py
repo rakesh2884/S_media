@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from rest_framework.response import Response
-from rest_framework import status
+from s_media_app.handlers.error_handler import error_response
 from s_media_app.models import User,Post,Like,Comment,Message
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,19 +10,19 @@ class UserSerializer(serializers.ModelSerializer):
             if follower:
                 return [follower.username]
             else:
-                return Response({'message':'no followers'},status=status.HTTP_400_BAD_REQUEST)
+                return error_response('no followers',400)
 
     def get_following(self, obj):
         for following in obj.following.all():
             if following:
                 return [following.username]
             else:
-                return Response({'message':'no followers'},status=status.HTTP_400_BAD_REQUEST)
+                return error_response('no following',400)
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'role', 'profile_picture','followers','following']
         extra_kwargs = {'password': {'write_only': True}}
-    
+
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
