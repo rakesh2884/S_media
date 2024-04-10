@@ -1,6 +1,6 @@
 from functools import wraps
 
-from s_media_app.error_success_management.error_handler import error_response
+from utils.error_handler import error_response
 from s_media import settings
 
 

@@ -1,16 +1,24 @@
+import time
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password, check_password
+from django.core.mail import send_mail
 
+from jwt import encode,decode
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from s_media_app.error_success_management.error_handler import error_response
-from s_media_app.error_success_management.success_handler import \
+
+from s_media.settings import EMAIL_HOST_USER,SECRET_KEY
+from utils.error_handler import error_response
+from utils.success_handler import \
     success_response
-from s_media_app.models import User
-from s_media_app.serializers import UserSerializer
+
+from user.models import User
+from user.serializers import UserSerializer
+
 
 
 class register(APIView):
@@ -54,11 +62,11 @@ class change_password(APIView):
         user = request.user
         serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
-            new_password = request.data['new_password']
-            if check_password(new_password, user.password):
+            updated_password = request.data['updated_password']
+            if check_password(updated_password, user.password):
                 return error_response("new password cannot be same", 400)
             else:
-                serializer.save(password=make_password(new_password))
+                serializer.save(password=make_password(updated_password))
                 return success_response("password change successfully", 200)
         return error_response(serializer.errors, 400)
 

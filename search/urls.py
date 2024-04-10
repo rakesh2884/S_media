@@ -1,8 +1,8 @@
 from django.urls import path
-from s_media_app.views import search_views
+from search import views
 
 urlpatterns = [
     path('search/',
-         search_views.search.as_view(),
+         views.search.as_view(),
          name='search'),
 ]

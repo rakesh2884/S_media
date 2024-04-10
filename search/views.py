@@ -2,10 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from s_media_app.error_success_management.success_handler import \
+from utils.success_handler import \
     success_response
-from s_media_app.models import User, Post
-from s_media_app.serializers import UserSerializer, PostSerializer
+from user.models import User
+from post.models import Post
+from user.serializers import UserSerializer
+from post.serializers import PostSerializer
 
 
 class search(APIView):

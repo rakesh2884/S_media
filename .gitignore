@@ -4,7 +4,4 @@
 .env
 media
 migrations
-s_media_app/__pycache__
-s_media/__pycache__
-s_media_app/urls/__pycache__
-s_media_app/views/__pycache__
+__pycache__
