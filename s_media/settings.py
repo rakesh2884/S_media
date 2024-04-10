@@ -41,7 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    's_media_app',
+    'user',
+    'post',
+    'message',
+    'follow',
+    'search',
     'rest_framework_simplejwt',
     'rest_framework',
 ]
@@ -62,7 +66,7 @@ USER_ROLE = os.getenv("USER_ROLE")
 ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
 
-AUTH_USER_MODEL = 's_media_app.User'
+AUTH_USER_MODEL = 'user.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
