@@ -24,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8zdu1g53duv(cc30)$ffkfb*bkzw*k&smu96#^xkj$)zzbdwhm'
+SECRET_KEY = 'django-insecure-8zdu1g53duv(cc30)$ffkfb*bkzw*k&smu96#^xkj$) \
+zzbdwhm'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -45,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework',
 ]
-AUTHENTICATION_BACKENDS = (  
+AUTHENTICATION_BACKENDS = (
   'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -55,11 +56,11 @@ REST_FRAMEWORK = {
      ],
 }
 
-UPLOAD_PROFILE_FOLDER=os.getenv('UPLOAD_PROFILE_FOLDER')
-UPLOAD_POST_FOLDER=os.getenv('UPLOAD_POST_FOLDER')
-USER_ROLE=os.getenv("USER_ROLE")
-ADMIN_ROLE=os.getenv("ADMIN_ROLE")
-MODERATOR_ROLE=os.getenv("MODERATOR_ROLE")
+UPLOAD_PROFILE_FOLDER = os.getenv('UPLOAD_PROFILE_FOLDER')
+UPLOAD_POST_FOLDER = os.getenv('UPLOAD_POST_FOLDER')
+USER_ROLE = os.getenv("USER_ROLE")
+ADMIN_ROLE = os.getenv("ADMIN_ROLE")
+MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
 AUTH_USER_MODEL = 's_media_app.User'
 
 SIMPLE_JWT = {
@@ -117,16 +118,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth. \
+            password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth. \
+            password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth. \
+            password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth. \
+            password_validation.NumericPasswordValidator',
     },
 ]
 
