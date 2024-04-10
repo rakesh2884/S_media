@@ -10,12 +10,13 @@ error_message = {
     404: {
         'message': "NOT FOUND",
     },
-    404: {
+    208: {
         'message': "ALREADY REPORTED",
     },
 }
 
-def error_response(detail,error_code):
+
+def error_response(detail, error_code):
     response = {
         "code": error_code,
         "message": error_message[error_code]['message'],
