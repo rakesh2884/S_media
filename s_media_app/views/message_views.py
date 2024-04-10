@@ -22,7 +22,7 @@ class send_message(APIView):
                              sender_id=request.user.id,
                              subject=notifi)
             n.save()
-            return success_response(serializer.data, 201)
+            return success_response(serializer.data, 200)
         return error_response(serializer.errors, 400)
 
 
@@ -57,4 +57,4 @@ class view_notifications(APIView):
             notification_data = {'user': notification.user.id,
                                  'sender': notification.sender.id,
                                  'subject': notification.subject}
-        return success_response(notification_data, status=202)
+        return success_response(notification_data, status=200)

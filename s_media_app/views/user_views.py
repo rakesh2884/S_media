@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
@@ -21,7 +21,7 @@ class register(APIView):
 
         if serializer.is_valid():
             serializer.save(password=make_password(request.data['password']))
-            return success_response(serializer.data, 201)
+            return success_response(serializer.data, 200)
         return error_response(serializer.errors, 400)
 
 
@@ -48,6 +48,21 @@ class get_profile(APIView):
         return success_response(serializer.data, 200)
 
 
+class change_password(APIView):
+    @permission_classes([IsAuthenticated])
+    def patch(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            new_password = request.data['new_password']
+            if check_password(new_password, user.password):
+                return error_response("new password cannot be same", 400)
+            else:
+                serializer.save(password=make_password(new_password))
+                return success_response("password change successfully", 200)
+        return error_response(serializer.errors, 400)
+
+
 class update_profile(APIView):
     @permission_classes([IsAuthenticated])
     def patch(self, request):
@@ -64,7 +79,7 @@ class delete_self_account(APIView):
     def delete(self, request):
         user = request.user
         user.delete()
-        return success_response('Your account deleted successfully', 202)
+        return success_response('Your account deleted successfully', 200)
 
 
 class view_others_profile(APIView):

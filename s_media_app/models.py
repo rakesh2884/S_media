@@ -20,6 +20,7 @@ class User(AbstractUser):
     followers = models.ManyToManyField('self',
                                        symmetrical=False,
                                        related_name='following')
+    forgot_token = models.BooleanField(default=False)
 
 
 class Post(models.Model):

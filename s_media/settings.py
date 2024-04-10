@@ -24,8 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8zdu1g53duv(cc30)$ffkfb*bkzw*k&smu96#^xkj$) \
-zzbdwhm'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -58,15 +57,25 @@ REST_FRAMEWORK = {
 
 UPLOAD_PROFILE_FOLDER = os.getenv('UPLOAD_PROFILE_FOLDER')
 UPLOAD_POST_FOLDER = os.getenv('UPLOAD_POST_FOLDER')
+
 USER_ROLE = os.getenv("USER_ROLE")
 ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
+
 AUTH_USER_MODEL = 's_media_app.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
   }
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -18,7 +18,7 @@ class create_post(APIView):
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            return success_response(serializer.data, 201)
+            return success_response(serializer.data, 200)
         return error_response(serializer.errors, 400)
 
 
@@ -26,7 +26,7 @@ class get_posts(APIView):
     def get(self, request):
         posts = Post.objects.all()
         serializer = PostSerializer(posts, many=True)
-        return success_response(serializer.data, 202)
+        return success_response(serializer.data, 200)
 
 
 class update_post(APIView):
@@ -69,7 +69,7 @@ class like_post(APIView):
         else:
             if serializer.is_valid():
                 serializer.save(user=request.user, post=post)
-                return success_response('Post liked successfully', 201)
+                return success_response('Post liked successfully', 200)
             return error_response(serializer.errors, 400)
 
 
@@ -84,7 +84,7 @@ class comment_on_post(APIView):
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, post=post)
-            return success_response(serializer.data, 201)
+            return success_response(serializer.data, 200)
         return error_response(serializer.errors, 400)
 
 
