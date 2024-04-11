@@ -30,5 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'role',
                   'profile_picture',
                   'followers',
-                  'following']
-        extra_kwargs = {'password': {'write_only': True}}
+                  'following',
+                  'forgot_link'
+                  ]
+        extra_kwargs = {'password': {'write_only': True},'forgot_link':{'write_only':True}}

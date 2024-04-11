@@ -16,3 +16,10 @@ def validate_password(value):
         raise ValidationError("Make sure your password has a number in it")
     else:
         return value
+
+def check_forgot_field(data):
+    required_fields=['username','new_password']
+    for field in required_fields:
+        if field not in data:
+            return False
+    return True
