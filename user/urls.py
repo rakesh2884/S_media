@@ -23,4 +23,10 @@ urlpatterns = [
     path('users/<int:user_id>/',
          views.view_others_profile.as_view(),
          name='user_profile'),
+    path('forgot_password/',
+         views.forgot_password.as_view(),
+         name='forgot_password'),
+    path('reset_password/',
+         views.reset_password.as_view(),
+         name='reset_password'),
 ]
