@@ -20,6 +20,6 @@ class User(AbstractUser):
     followers = models.ManyToManyField('self',
                                        symmetrical=False,
                                        related_name='following')
-    forgot_link = models.BooleanField(default=False)
+    isLinksent = models.BooleanField(default=False)
     expired_time = models.IntegerField(null=True)
 

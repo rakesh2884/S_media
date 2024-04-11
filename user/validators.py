@@ -18,8 +18,14 @@ def validate_password(value):
         return value
 
 def check_forgot_field(data):
-    required_fields=['new_password']
+    required_fields=['new_password','confirm_password']
     for field in required_fields:
         if field not in data:
             return False
     return True
+
+def confirm_password_check(password,confirm_password):
+    if password == confirm_password:
+        return True
+    else:
+        return False
