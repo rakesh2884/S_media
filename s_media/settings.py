@@ -66,6 +66,8 @@ USER_ROLE = os.getenv("USER_ROLE")
 ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
 
+RESET_LINK=os.getenv('RESET_LINK')
+
 AUTH_USER_MODEL = 'user.User'
 
 SIMPLE_JWT = {
