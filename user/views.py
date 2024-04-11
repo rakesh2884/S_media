@@ -16,7 +16,7 @@ from utils.error_handler import error_response
 from utils.success_handler import \
     success_response
 
-from user.validators import check_forgot_field
+from user.validators import check_forgot_field, confirm_password_check
 from user.models import User
 from user.serializers import UserSerializer
 
@@ -80,11 +80,10 @@ class forgot_password(APIView):
         except User.DoesNotExist:
             return error_response('User not found', 404)
         now=int(time.time())
-        user.forgot_link=False
+        user.isLinksent=False
         user.expired_time=now+60
         user.save()
         link = encode({"username": username,
-                        "email": user.email,
                         "action": "reset_link",
                         "timestamp": now}, SECRET_KEY)
         reset_link = RESET_LINK+link
@@ -98,25 +97,28 @@ class forgot_password(APIView):
 
 class reset_password(APIView):
     def post(self, request,link):
-        new_password = request.data['new_password']
-        if check_forgot_field:
-            decoded_link = decode(link, SECRET_KEY, algorithms=['HS256'])
-            email = decoded_link.get('email')
-            username=decoded_link.get('username')
-            user = User.objects.get(username=username)
-            try:
+        if check_forgot_field(request.data):
+            new_password = request.data['new_password']
+            confirm_password=request.data['confirm_password']
+            if confirm_password_check(new_password,confirm_password):
+                decoded_link = decode(link, SECRET_KEY, algorithms=['HS256'])
+                username=decoded_link.get('username')
                 user = User.objects.get(username=username)
-            except User.DoesNotExist:
-                return error_response('User not found', 404)
-            if user.forgot_link is False and time.time()<user.expired_time:
-                user.forgot_link=True
-                user.password=make_password(new_password)
-                user.save()
-                return success_response("password reset successfully", 200) 
+                try:
+                    user = User.objects.get(username=username)
+                except User.DoesNotExist:
+                    return error_response('User not found', 404)
+                if user.isLinksent is False and int(time.time())<user.expired_time:
+                    user.isLinksent=True
+                    user.password=make_password(new_password)
+                    user.save()
+                    return success_response("password reset successfully", 200) 
+                else:
+                    return error_response("Link expired", 400)
             else:
-                return error_response("Link expired", 400)
+                return error_response('password not match', 400)
         else:
-                return error_response('new_password field is missing', 400)
+            return error_response('field(new_password or confirm_password) is missing', 400)
 
 
 class update_profile(APIView):
