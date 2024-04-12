@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from user.validators import validate_password
+from user.utils import validate_password
 from s_media import settings
 
 
@@ -20,6 +20,12 @@ class User(AbstractUser):
     followers = models.ManyToManyField('self',
                                        symmetrical=False,
                                        related_name='following')
-    isLinksent = models.BooleanField(default=False)
-    expired_time = models.IntegerField(null=True)
 
+
+class OTP(models.Model):
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE,
+                             related_name='otp_user')
+    isused = models.BooleanField(default=False)
+    otp = models.IntegerField(null=True)
+    expired_time = models.IntegerField(null=True)
