@@ -22,10 +22,10 @@ class User(AbstractUser):
                                        related_name='following')
 
 
-class OTP(models.Model):
+class Link(models.Model):
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
-                             related_name='otp_user')
-    isused = models.BooleanField(default=False)
-    otp = models.IntegerField(null=True)
+                             related_name='link_user')
+    isUsed = models.BooleanField(default=False)
+    token = models.CharField(null=True)
     expired_time = models.IntegerField(null=True)

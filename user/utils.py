@@ -19,7 +19,7 @@ def validate_password(value):
 
 
 def check_forgot_field(data):
-    required_fields = ['new_password', 'confirm_password', 'otp', 'username']
+    required_fields = ['new_password', 'confirm_password']
     for field in required_fields:
         if field not in data:
             return False

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from utils.error_handler import error_response
-from user.models import User, OTP
+from user.models import User, Link
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-class OTPSerializer(serializers.ModelSerializer):
+class LinkSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OTP
+        model = Link
         fields = '__all__'
