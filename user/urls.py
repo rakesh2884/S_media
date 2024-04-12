@@ -26,7 +26,7 @@ urlpatterns = [
     path('forgot_password/',
          views.forgot_password.as_view(),
          name='forgot_password'),
-    path('reset_password/',
+    path('reset_password/<token>',
          views.reset_password.as_view(),
          name='reset_password'),
 ]

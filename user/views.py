@@ -1,25 +1,25 @@
 import time
 
-from django_otp.oath import TOTP
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 
-
+from jwt import encode, decode
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-from s_media.settings import EMAIL_HOST_USER
+from s_media.settings import EMAIL_HOST_USER, SECRET_KEY, SECRET_KEY2, \
+    RESET_LINK
 from utils.error_handler import error_response
 from utils.success_handler import \
     success_response
 
 from user.utils import check_forgot_field, confirm_password_check
-from user.models import User, OTP
-from user.serializers import UserSerializer, OTPSerializer
+from user.models import User, Link
+from user.serializers import UserSerializer, LinkSerializer
 
 
 class register(APIView):
@@ -73,34 +73,37 @@ class change_password(APIView):
 
 
 class forgot_password(APIView):
-    serializer_class = OTPSerializer
+    serializer_class = LinkSerializer
 
     def post(self, request):
-        serializer = OTPSerializer(data=request.data, partial=True)
+        serializer = LinkSerializer(data=request.data, partial=True)
         if serializer.is_valid():
-            value = b'12345678901234567890'
             user = request.data['user']
             try:
                 users = User.objects.get(id=user)
             except User.DoesNotExist:
                 return error_response('User not found', 404)
-            totp = TOTP(key=value,
-                        step=30,
-                        digits=6)
+            now = int(time.time())
+            token = encode({"username": users.username,
+                           "action": "reset_link",
+                            "timestamp": now}, SECRET_KEY)
+            print(token)
+            encoded_token = encode({"token": token}, SECRET_KEY2)
             try:
-                user_exist = OTP.objects.get(user=user)
+                user_exist = Link.objects.get(user=user)
                 user_exist.delete()
             finally:
                 now = int(time.time())
                 expired_time = now + 60
-                token = totp.token()
-                serializer.save(otp=token,
-                                isused=False,
+                token = token
+                serializer.save(token=encoded_token,
+                                isUsed=False,
                                 expired_time=expired_time)
+                reset_link = RESET_LINK+token
                 subject = 'Reset Your Password'
                 message = "Hey ," + users.username + \
-                    " To reset your password. Your OTP is : " + \
-                    str(token)
+                    " To reset your password. Your link is : " + \
+                    reset_link
                 email_from = EMAIL_HOST_USER
                 recipient_list = [users.email, ]
                 send_mail(subject,
@@ -112,37 +115,40 @@ class forgot_password(APIView):
 
 
 class reset_password(APIView):
-    def post(self, request):
-        if check_forgot_field(request.data):
-            new_password = request.data['new_password']
-            confirm_password = request.data['confirm_password']
-            username = request.data['username']
-            if confirm_password_check(new_password, confirm_password):
-                otp = request.data['otp']
-                now = int(time.time())
+    def post(self, request, token):
+        decoded_link = decode(token, SECRET_KEY, algorithms=['HS256'])
+        username = decoded_link.get('username')
+        if check_forgot_field:
+            new_password = request.POST.get('new_password')
+            if confirm_password_check:
                 try:
                     users = User.objects.get(username=username)
                 except User.DoesNotExist:
-                    return error_response('user not exist', 400)
-                user_exist = OTP.objects.get(user=users.id)
+                    return error_response('user not exist', 404)
+                try:
+                    user_exist = Link.objects.get(user=users.id)
+                except Link.DoesNotExist:
+                    return error_response('no link generate', 400)
                 expired_time = user_exist.expired_time
-                if now < expired_time:
-                    if user_exist.otp == int(otp):
-                        user_exist.isused = True
+                encoded_token = encode({"token": token}, SECRET_KEY2)
+                now = int(time.time())
+                if now < expired_time and user_exist.isUsed is False:
+                    if user_exist.token == encoded_token:
+                        user_exist.isUsed = True
                         user_exist.save()
                         users.password = make_password(new_password)
                         users.save()
-                        return success_response("password reset successfully",
+                        return success_response("password reset \
+                                                 successfully",
                                                 200)
                     else:
-                        return error_response('OTP expired', 400)
+                        return error_response('Link expired', 400)
                 else:
-                    return error_response("OTP expired", 400)
+                    return error_response("Link expired", 400)
             else:
                 return error_response('password not match', 400)
         else:
-            return error_response('field(new_password or confirm_password) \
-                                  is missing', 400)
+            return error_response('fields are missing', 400)
 
 
 class update_profile(APIView):
