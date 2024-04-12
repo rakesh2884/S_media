@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from utils.error_handler import error_response
-from user.models import User
+from user.models import User, OTP
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,7 +31,11 @@ class UserSerializer(serializers.ModelSerializer):
                   'profile_picture',
                   'followers',
                   'following',
-                  'forgot_link',
-                  'expired_time',
                   ]
-        extra_kwargs = {'password': {'write_only': True},'forgot_link':{'write_only':True}, 'expired_time':{'write_only':True}}
+        extra_kwargs = {'password': {'write_only': True}}
+
+
+class OTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OTP
+        fields = '__all__'
