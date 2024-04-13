@@ -31,8 +31,10 @@ class UserSerializer(serializers.ModelSerializer):
                   'profile_picture',
                   'followers',
                   'following',
+                  'login_attempt'
                   ]
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True},
+                        'login_attempt': {'write_only': True}}
 
 
 class LinkSerializer(serializers.ModelSerializer):
