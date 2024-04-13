@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from s_media.settings import EMAIL_HOST_USER, SECRET_KEY, SECRET_KEY2, \
-    RESET_LINK
+    RESET_LINK, ACTIVATE_LINK
 from utils.error_handler import error_response
 from utils.success_handler import \
     success_response
@@ -38,14 +38,84 @@ class login(APIView):
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user:
-            refresh = RefreshToken.for_user(user)
-            return success_response({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh)
-            }, 200)
-        return error_response('Invalid credentials', 401)
+        try:
+            user_check = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return error_response('User not exist')
+        while user_check.login_attempt <= 3 and user_check.is_active is True:
+            user = authenticate(username=username, password=password)
+            if user:
+                user_check.login_attempt = 1
+                user_check.save()
+                refresh = RefreshToken.for_user(user)
+                return success_response({
+                    'access_token': str(refresh.access_token),
+                    'refresh_token': str(refresh)
+                }, 200)
+            user_check.login_attempt += 1
+            user_check.save()
+            return error_response('Wrong password, Try again', 401)
+        user_check.is_active = False
+        user_check.save()
+        links = encode({"username": username,
+                       "action": "deactivate",
+                        "timestamp": int(time.time())}, SECRET_KEY)
+        try:
+            link = Link.objects.get(user=user_check.id)
+            link.delete()
+        finally:
+            now = int(time.time())
+            expired_time = now + 60
+            link = Link(token=links,
+                        isUsed=False,
+                        expired_time=expired_time,
+                        user_id=user_check.id)
+            link.save()
+            activation_link = f"{ACTIVATE_LINK}?links={links}"
+            subject = 'Unauthorized access'
+            message = "Hey ," + user_check.username + \
+                      " someone unauthorized try to access your account, so" \
+                      "your account is deactivated.If you are " \
+                      "making the attempt " \
+                      "then deactivate your account by this link: " + \
+                      activation_link
+            email_from = EMAIL_HOST_USER
+            recipient_list = [user_check.email, ]
+            send_mail(subject,
+                      message,
+                      email_from,
+                      recipient_list)
+            return success_response('Deactivation Link sent successfully', 200)
+
+
+class activate(APIView):
+    def get(self, request):
+        links = request.GET.get('links')
+        decoded_link = decode(links, SECRET_KEY, algorithms=['HS256'])
+        username = decoded_link.get('username')
+        try:
+            users = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return error_response('user not exist', 404)
+        try:
+            user_exist = Link.objects.get(user=users.id)
+        except Link.DoesNotExist:
+            return error_response('no link generate', 400)
+        expired_time = user_exist.expired_time
+        now = int(time.time())
+        if now < expired_time and user_exist.isUsed is False:
+            if user_exist.token == links:
+                user_exist.isUsed = True
+                user_exist.save()
+                users.is_active = True
+                users.login_attempt = 1
+                users.save()
+                return success_response("Account activated \
+                                         successfully", 200)
+            else:
+                return error_response('Link expired', 400)
+        else:
+            return error_response("Link expired", 400)
 
 
 class get_profile(APIView):

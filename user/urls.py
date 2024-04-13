@@ -29,4 +29,7 @@ urlpatterns = [
     path('reset_password/<token>',
          views.reset_password.as_view(),
          name='reset_password'),
+    path('activate',
+         views.activate.as_view(),
+         name='activate_account'),
 ]

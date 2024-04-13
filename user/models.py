@@ -17,6 +17,7 @@ class User(AbstractUser):
         ImageField(upload_to=settings.UPLOAD_PROFILE_FOLDER,
                    null=True,
                    blank=True)
+    login_attempt = models.IntegerField(default=1)
     followers = models.ManyToManyField('self',
                                        symmetrical=False,
                                        related_name='following')

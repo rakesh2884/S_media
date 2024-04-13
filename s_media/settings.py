@@ -67,6 +67,7 @@ ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
 
 RESET_LINK = os.getenv('RESET_LINK')
+ACTIVATE_LINK = os.getenv('ACTIVATE_LINK')
 
 AUTH_USER_MODEL = 'user.User'
 
