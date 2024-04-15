@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import time
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -68,6 +69,8 @@ MODERATOR_ROLE = os.getenv("MODERATOR_ROLE")
 
 RESET_LINK = os.getenv('RESET_LINK')
 ACTIVATE_LINK = os.getenv('ACTIVATE_LINK')
+
+CURRENT_TIME = int(time.time())
 
 AUTH_USER_MODEL = 'user.User'
 

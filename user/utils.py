@@ -1,5 +1,9 @@
 import re
+
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+
+from s_media.settings import EMAIL_HOST_USER
 
 
 def validate_password(value):
@@ -31,3 +35,9 @@ def confirm_password_check(password, confirm_password):
         return True
     else:
         return False
+
+
+def send_email(subject, message, email):
+    email_from = EMAIL_HOST_USER
+    recipient_list = [email, ]
+    send_mail(subject, message, email_from, recipient_list)
