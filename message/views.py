@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from utils.error_handler import error_response
 from utils.success_handler import \
     success_response
+
+from message.utils import notification_save
 from message.models import Message, Notification
 from message.serializers import MessageSerializer
 
@@ -18,10 +20,7 @@ class send_message(APIView):
         if serializer.is_valid():
             serializer.save(sender_id=request.user.id, receiver_id=user_id)
             notifi = "you received an dm from ", request.user.username
-            n = Notification(user_id=user_id,
-                             sender_id=request.user.id,
-                             subject=notifi)
-            n.save()
+            notification_save(user_id, request.usre.id, notifi)
             return success_response(serializer.data, 200)
         return error_response(serializer.errors, 400)
 

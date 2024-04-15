@@ -1,9 +1,10 @@
-import time
+import random
+import re
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password, check_password
-from django.core.mail import send_mail
 
+import base64
 from jwt import encode, decode
 from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
@@ -11,13 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-from s_media.settings import EMAIL_HOST_USER, SECRET_KEY, SECRET_KEY2, \
-    RESET_LINK, ACTIVATE_LINK
+from s_media.settings import SECRET_KEY, SECRET_KEY2, \
+    RESET_LINK, ACTIVATE_LINK, CURRENT_TIME
 from utils.error_handler import error_response
 from utils.success_handler import \
     success_response
 
-from user.utils import check_forgot_field, confirm_password_check
+from user.utils import check_forgot_field, confirm_password_check, send_email
 from user.models import User, Link
 from user.serializers import UserSerializer, LinkSerializer
 
@@ -41,7 +42,7 @@ class login(APIView):
         try:
             user_check = User.objects.get(username=username)
         except User.DoesNotExist:
-            return error_response('User not exist')
+            return error_response('User not exist', 404)
         while user_check.login_attempt <= 3 and user_check.is_active is True:
             user = authenticate(username=username, password=password)
             if user:
@@ -57,44 +58,39 @@ class login(APIView):
             return error_response('Wrong password, Try again', 401)
         user_check.is_active = False
         user_check.save()
-        links = encode({"username": username,
-                       "action": "deactivate",
-                        "timestamp": int(time.time())}, SECRET_KEY)
+        prefix = str(random.randint(500, 5000))
+        suffix = str(random.randint(500, 5000))
+        username = str(username)
+        encoded_prefix = base64.b64encode(prefix.encode()).decode()
+        encoded_suffix = base64.b64encode(suffix.encode()).decode()
+        encoded_username = base64.b64encode(username.encode()).decode()
+        links = encoded_prefix + encoded_username + encoded_suffix
         try:
             link = Link.objects.get(user=user_check.id)
             link.delete()
         finally:
-            now = int(time.time())
-            expired_time = now + 60
-            link = Link(token=links,
-                        isUsed=False,
-                        expired_time=expired_time,
+            expired_time = CURRENT_TIME + 60
+            link = Link(token=links, isUsed=False, expired_time=expired_time,
                         user_id=user_check.id)
             link.save()
             activation_link = f"{ACTIVATE_LINK}?links={links}"
             subject = 'Unauthorized access'
             message = "Hey ," + user_check.username + \
                       " someone unauthorized try to access your account, so" \
-                      "your account is deactivated.If you are " \
-                      "making the attempt " \
-                      "then deactivate your account by this link: " + \
-                      activation_link
-            email_from = EMAIL_HOST_USER
-            recipient_list = [user_check.email, ]
-            send_mail(subject,
-                      message,
-                      email_from,
-                      recipient_list)
+                      "your account is deactivated.If you are making the" \
+                      " attempt then deactivate your account by this link: " \
+                      + activation_link
+            send_email(subject, message, user_check.email)
             return success_response('Deactivation Link sent successfully', 200)
 
 
 class activate(APIView):
     def get(self, request):
         links = request.GET.get('links')
-        decoded_link = decode(links, SECRET_KEY, algorithms=['HS256'])
-        username = decoded_link.get('username')
+        decoded_link = base64.b64decode(links).decode()
+        username = re.sub(r'[~^0-9]', '', decoded_link)
         try:
-            users = User.objects.get(username=username)
+            users = User.objects.get(username=str(username))
         except User.DoesNotExist:
             return error_response('user not exist', 404)
         try:
@@ -102,16 +98,14 @@ class activate(APIView):
         except Link.DoesNotExist:
             return error_response('no link generate', 400)
         expired_time = user_exist.expired_time
-        now = int(time.time())
-        if now < expired_time and user_exist.isUsed is False:
+        if CURRENT_TIME < expired_time and user_exist.isUsed is False:
             if user_exist.token == links:
                 user_exist.isUsed = True
                 user_exist.save()
                 users.is_active = True
                 users.login_attempt = 1
                 users.save()
-                return success_response("Account activated \
-                                         successfully", 200)
+                return success_response("Account activated successfully", 200)
             else:
                 return error_response('Link expired', 400)
         else:
@@ -153,18 +147,19 @@ class forgot_password(APIView):
                 users = User.objects.get(id=user)
             except User.DoesNotExist:
                 return error_response('User not found', 404)
-            now = int(time.time())
-            token = encode({"username": users.username,
-                           "action": "reset_link",
-                            "timestamp": now}, SECRET_KEY)
-            print(token)
+            prefix = str(random.randint(500, 5000))
+            suffix = str(random.randint(500, 5000))
+            username = str(users.username)
+            encoded_prefix = base64.b64encode(prefix.encode()).decode()
+            encoded_suffix = base64.b64encode(suffix.encode()).decode()
+            encoded_username = base64.b64encode(username.encode()).decode()
+            token = encoded_prefix + encoded_username + encoded_suffix
             encoded_token = encode({"token": token}, SECRET_KEY2)
             try:
                 user_exist = Link.objects.get(user=user)
                 user_exist.delete()
             finally:
-                now = int(time.time())
-                expired_time = now + 60
+                expired_time = CURRENT_TIME + 60
                 token = token
                 serializer.save(token=encoded_token,
                                 isUsed=False,
@@ -174,20 +169,15 @@ class forgot_password(APIView):
                 message = "Hey ," + users.username + \
                     " To reset your password. Your link is : " + \
                     reset_link
-                email_from = EMAIL_HOST_USER
-                recipient_list = [users.email, ]
-                send_mail(subject,
-                          message,
-                          email_from,
-                          recipient_list)
+                send_email(subject, message, users.email)
                 return success_response('OTP sent successfully', 200)
         return error_response(serializer.errors, 400)
 
 
 class reset_password(APIView):
     def post(self, request, token):
-        decoded_link = decode(token, SECRET_KEY, algorithms=['HS256'])
-        username = decoded_link.get('username')
+        decoded_link = base64.b64decode(token).decode()
+        username = re.sub(r'[~^0-9]', '', decoded_link)
         if check_forgot_field:
             new_password = request.POST.get('new_password')
             if confirm_password_check:
@@ -201,8 +191,7 @@ class reset_password(APIView):
                     return error_response('no link generate', 400)
                 expired_time = user_exist.expired_time
                 encoded_token = encode({"token": token}, SECRET_KEY2)
-                now = int(time.time())
-                if now < expired_time and user_exist.isUsed is False:
+                if CURRENT_TIME < expired_time and user_exist.isUsed is False:
                     if user_exist.token == encoded_token:
                         user_exist.isUsed = True
                         user_exist.save()
